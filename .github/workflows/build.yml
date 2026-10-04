@@ -19,13 +19,19 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
+          log-accepted-android-sdk-licenses: false
+
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses || true
+
       - name: Setup Gradle 8.5
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.5'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Build APK
         run: gradle assembleDebug --no-daemon --stacktrace
