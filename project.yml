@@ -1,0 +1,29 @@
+name: FootPredict
+build-path: .build
+libs-path: .libs
+
+bins:
+  aapt2: /usr/bin/aapt2
+  javac: /usr/bin/javac
+  kotlinc: /home/kali/.sdkman/candidates/kotlin/current/bin/kotlinc
+  d8: /home/kali/ApkBuilder/bin/d8
+  apksigner: /usr/bin/apksigner
+
+android:
+  sdk-path: /usr/lib/android-sdk
+  sdk-api-version: 34
+  sdk-min-api-version: 21
+  version-code: 4
+  version-name: "4.0"
+  build-type: debug
+  view-binding: false
+  manifest-path: AndroidManifest.xml
+  java-path: src/java
+  sources-path: src/java
+  res-path: src/res
+  assets-path: src/assets
+  keystore-path: footpredict.keystore
+  keystore-alias: footpredict
+  keystore-store-pass: footpredict
+  keystore-key-pass: footpredict
+  java-version: 17
