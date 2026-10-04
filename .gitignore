@@ -1,9 +1,17 @@
-/build/
-/app/build/
-/.gradle/
-/.build/
-/.libs/
+# Build
+build/
+app/build/
+.gradle/
+.build/
+.libs/
+
+# IDE
 .idea/
 *.iml
+
+# Local
 local.properties
 *.keystore
+
+# OS
+.DS_Store
