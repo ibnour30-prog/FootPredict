@@ -7,16 +7,9 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.View
 import android.widget.*
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.AdListener
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -24,18 +17,6 @@ import java.util.Locale
 
 class MainActivity : Activity() {
 
-    // ═══════════════════════════════════════════════════════════
-    //  ADMOB — IDs (remplace par tes vrais IDs AdMob)
-    // ═══════════════════════════════════════════════════════════
-    // ⚠️ ID de TEST Google — fonctionne pour tester
-    private val ADMOB_APP_ID = "ca-app-pub-3940256099942544~3347511713"
-    private val ADMOB_BANNER_ID = "ca-app-pub-3940256099942544/6300978111"
-
-    private var adView: AdView? = null
-
-    // ═══════════════════════════════════════════════════════════
-    //  VUES
-    // ═══════════════════════════════════════════════════════════
     private lateinit var et1: EditText
     private lateinit var et2: EditText
     private lateinit var etDate: EditText
@@ -59,10 +40,12 @@ class MainActivity : Activity() {
     private val C_GOLD    = Color.parseColor("#ffd166")
     private val C_BORDER  = Color.parseColor("#2c3854")
     private val C_RED     = Color.parseColor("#ff5d6c")
-    private val C_FEU     = Color.parseColor("#ff5d3a")
-    private val C_AIR     = Color.parseColor("#7fc4ff")
-    private val C_TERRE   = Color.parseColor("#c19a6b")
-    private val C_EAU     = Color.parseColor("#3ba0ff")
+
+    // ─── Couleurs par élément ─────────────────────
+    private val C_FEU   = Color.parseColor("#ff5d3a")
+    private val C_AIR   = Color.parseColor("#7fc4ff")
+    private val C_TERRE = Color.parseColor("#c19a6b")
+    private val C_EAU   = Color.parseColor("#3ba0ff")
 
     // ─── Données Abjad ───────────────────────────
     private val ABJAD = mapOf(
@@ -73,8 +56,11 @@ class MainActivity : Activity() {
     )
 
     private data class Planet(
-        val name: String, val star: String, val nature: String,
-        val symbol: String, val element: String
+        val name: String,
+        val star: String,
+        val nature: String,
+        val symbol: String,   // ✅ symbole pour décor
+        val element: String   // ✅ élément pour couleur
     )
 
     private val PLANETS = mapOf(
@@ -110,20 +96,8 @@ class MainActivity : Activity() {
         "Mercure/Mars" to listOf("Mercure","Mars")
     )
 
-    // ═══════════════════════════════════════════════════════════
-    //  ONCREATE
-    // ═══════════════════════════════════════════════════════════
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ✅ INITIALISATION ADMOB
-        MobileAds.initialize(this) {
-            // Callback : AdMob est prêt
-            runOnUiThread {
-                loadBannerAd()
-            }
-        }
-
         prefs = getSharedPreferences("footpredict", Context.MODE_PRIVATE)
 
         try {
@@ -135,7 +109,7 @@ class MainActivity : Activity() {
             root.setPadding(dp(40), dp(50), dp(40), dp(50))
             scroll.addView(root)
 
-            // ═══ EN-TÊTE ═══
+            // ═══ EN-TÊTE DÉCORÉ ═══
             val title = TextView(this)
             title.text = "⚽ FootPredict ⚽"
             title.textSize = 26f
@@ -219,16 +193,6 @@ class MainActivity : Activity() {
             card.addView(btn)
 
             root.addView(card)
-
-            // ═══ BANNIÈRE ADMOB ═══
-            val adContainer = FrameLayout(this)
-            val adLp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT)
-            adLp.topMargin = dp(20)
-            adContainer.layoutParams = adLp
-            adContainer.id = View.generateViewId()
-            root.addView(adContainer)
 
             // ═══ RÉSULTAT ═══
             val resultCard = LinearLayout(this)
@@ -353,67 +317,6 @@ class MainActivity : Activity() {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    //  ADMOB — CHARGEMENT DE LA BANNIÈRE
-    // ═══════════════════════════════════════════════════════════
-    private fun loadBannerAd() {
-        try {
-            // Créer la bannière
-            adView = AdView(this)
-            adView?.adUnitId = ADMOB_BANNER_ID
-
-            // Adapter la taille à l'écran
-            val displayMetrics = resources.displayMetrics
-            val adWidthPixels = displayMetrics.widthPixels
-            val density = displayMetrics.density
-            val adWidth = (adWidthPixels / density).toInt()
-
-            val adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth)
-            adView?.adSize = adSize
-
-            // Écouter les événements (optionnel, pour debug)
-            adView?.adListener = object : AdListener() {
-                override fun onAdLoaded() {
-                    // Bannière chargée
-                }
-                override fun onAdFailedToLoad(error: LoadAdError) {
-                    // En cas d'échec : on peut log ou réessayer
-                    android.util.Log.e("AdMob", "Bannière échec : ${error.message}")
-                }
-            }
-
-            // Ajouter la bannière dans le conteneur
-            val adContainer = findViewById<FrameLayout>(
-                android.R.id.content
-            )?.let { null } // placeholder, on ajoute au root directement
-
-            // Créer la requête
-            val adRequest = AdRequest.Builder().build()
-
-            // Charger la bannière
-            adView?.loadAd(adRequest)
-
-            // Trouver le conteneur (dernier élément du root) et y ajouter la bannière
-            val rootView = (findViewById<View>(android.R.id.content) as? android.view.ViewGroup)
-                ?.getChildAt(0) as? ScrollView
-            val innerLayout = rootView?.getChildAt(0) as? LinearLayout
-
-            if (innerLayout != null) {
-                // Insérer la bannière après le premier enfant (le titre) mais avant le reste
-                // Ou à la fin : on choisit de la mettre à la fin
-                val bannerWrapper = LinearLayout(this)
-                bannerWrapper.orientation = LinearLayout.VERTICAL
-                bannerWrapper.gravity = Gravity.CENTER_HORIZONTAL
-                bannerWrapper.setPadding(0, dp(15), 0, 0)
-                bannerWrapper.addView(adView)
-                innerLayout.addView(bannerWrapper)
-            }
-
-        } catch (e: Throwable) {
-            android.util.Log.e("AdMob", "Erreur chargement bannière : ${e.message}")
-        }
-    }
-
     // ═══ Helpers UI ═══
     private fun roundedBg(color: Int, radius: Int): GradientDrawable {
         val g = GradientDrawable()
@@ -423,6 +326,7 @@ class MainActivity : Activity() {
         return g
     }
 
+    // ✅ Fond décoré pour le résultat (bordure dorée épaisse)
     private fun roundedBgDecorated(color: Int, radius: Int): GradientDrawable {
         val g = GradientDrawable()
         g.setColor(color)
@@ -555,7 +459,7 @@ class MainActivity : Activity() {
             }
             val matchHour = tp[0].toInt()
 
-            // ✅ DÉTERMINISME
+            // ✅ DÉTERMINISME : cal.clear() + heure fixe à midi
             val cal = Calendar.getInstance()
             cal.clear()
             cal.set(y, mo - 1, da, 12, 0, 0)
@@ -616,7 +520,10 @@ class MainActivity : Activity() {
             i1.score = maxOf(0, minOf(5, i1.score))
             i2.score = maxOf(0, minOf(5, i2.score))
 
+            // ✅ Score décoré
             tvScore.text = "${i1.planet.symbol} ${i1.score}  —  ${i2.score} ${i2.planet.symbol}"
+
+            // ✅ Score avec couleur selon élément dominant
             val dominantElement = if (i1.score >= i2.score) i1.planet.element else i2.planet.element
             tvScore.setTextColor(elementColor(dominantElement))
 
@@ -639,6 +546,7 @@ class MainActivity : Activity() {
         }
     }
 
+    // ✅ Détail décoré avec symbole étoile + planète
     private fun detail(i: Info): String {
         val sb = StringBuilder()
         val elemSymbol = when (i.planet.element) {
@@ -667,6 +575,7 @@ class MainActivity : Activity() {
         val existing = prefs.getString("history", "") ?: ""
         val lines = existing.split("\n").filter { it.isNotEmpty() }.toMutableList()
 
+        // Déduplication : même équipes + même date + même heure
         val key = "$t1|$t2|$ds|$ts"
         lines.removeAll { line ->
             val p = line.split("|")
@@ -674,6 +583,7 @@ class MainActivity : Activity() {
         }
         lines.add(0, entry)
 
+        // ✅ PAS DE LIMITE — on garde TOUT
         prefs.edit().putString("history", lines.joinToString("\n")).apply()
     }
 
@@ -687,6 +597,7 @@ class MainActivity : Activity() {
         val sb = StringBuilder()
         sb.append("Total : ${lines.size} predictions\n")
         sb.append("━━━━━━━━━━━━━━━\n")
+        // Afficher les 20 dernières (mais tout est gardé en mémoire)
         for (line in lines.take(20)) {
             val p = line.split("|")
             if (p.size >= 9) {
@@ -701,24 +612,6 @@ class MainActivity : Activity() {
             sb.append("… et ${lines.size - 20} autres predictions")
         }
         tvHistory.text = sb.toString()
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    //  CYCLE DE VIE ADMOB
-    // ═══════════════════════════════════════════════════════════
-    override fun onResume() {
-        super.onResume()
-        adView?.resume()
-    }
-
-    override fun onPause() {
-        adView?.pause()
-        super.onPause()
-    }
-
-    override fun onDestroy() {
-        adView?.destroy()
-        super.onDestroy()
     }
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
